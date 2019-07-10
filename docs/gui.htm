@@ -55,8 +55,8 @@ function run() {
 
     drawGraph();
 
-    var IMUX = '/sys/bus/iio/devices/iio:device1/in_accel_x_raw';
     function drawGraph() {
+	var IMUX = '/sys/bus/iio/devices/iio:device1/in_accel_x_raw';
     	  //console.log("drawGraph");
         plot.setData(getData());
         plot.draw();
