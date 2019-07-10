@@ -29,9 +29,73 @@ function run() {
 			element.fill('#0f0');
     }
 	  setTimeout(doRead, 100);  
-  }
-}
-  
+    }
+	  
+    var POT = 'ADC_3';
+
+    var container = $("#myplot");
+    var totalPoints = container.outerWidth() / 2 || 250;
+    var data = [];
+    var plotOptions = {
+        series: {
+            shadowSize: 0
+        },
+        yaxis: {
+            min: 1,
+            max: 0
+        },
+        xaxis: {
+            min: 0,
+            max: totalPoints,
+            show: false
+        }
+    };
+    var plot = $.plot(container, getData(), plotOptions);
+
+    drawGraph();
+
+    var IMUX = '/sys/bus/iio/devices/iio:device1/in_accel_x_raw';
+    function drawGraph() {
+    	//console.log("drawGraph");
+        plot.setData(getData());
+        plot.draw();
+        //b.readTextFile(IMUX, onAnalogRead);
+	b.analogRead(POT, onAnalogRead);
+    }
+
+    // Handle data back from potentiometer
+    function onAnalogRead(x) {
+    	//console.log("onAnalogRead");
+        //if (!x.err && typeof x.value == 'number') {
+            //pushData(x.data.trim());
+	    pushData(x.value);
+        //}
+        setTimeout(drawGraph, 20);
+    }
+
+    function pushData(y) {
+        if (data.length && (data.length + 1) > totalPoints) {
+            data = data.slice(1);
+        }
+        if (data.length < totalPoints) {
+            data.push(y);
+        }
+    }
+
+    function getData() {
+        var res = [];
+        for (var i = 0; i < data.length; ++i) {
+            res.push([i, data[i]]);
+        }
+        var series = [{
+            data: res,
+            lines: {
+                fill: true
+            }
+        }];
+        return series;
+    }
+}  
   </script>
 </head>
 <body>
@@ -42,5 +106,9 @@ function run() {
    <circle id="mycircle" cx="50" cy="50" r="40" stroke="#aaa" stroke-width="4" fill="#aaa" />
    Sorry, your browser does not support inline SVG.
 </svg> 
+	
+<h1>BoneScript Flot Demo</h1> 
+<div id="myplot" style="width:500px;height:250px;"></div>
+	
 </body>
 </html>
