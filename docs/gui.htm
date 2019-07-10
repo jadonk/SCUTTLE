@@ -42,8 +42,8 @@ function run() {
             shadowSize: 0
         },
         yaxis: {
-            min: 0,
-            max: 1
+            min: -20000,
+            max: 20000
         },
         xaxis: {
             min: 0,
@@ -60,16 +60,16 @@ function run() {
     	  //console.log("drawGraph");
         plot.setData(getData());
         plot.draw();
-        //b.readTextFile(IMUX, onAnalogRead);
-	      b.analogRead(POT, onAnalogRead);
+        b.readTextFile(IMUX, onAnalogRead);
+	//b.analogRead(POT, onAnalogRead);
     }
 
     // Handle data back from potentiometer
     function onAnalogRead(x) {
     	//console.log("onAnalogRead");
         //if (!x.err && typeof x.value == 'number') {
-            //pushData(x.data.trim());
-	    pushData(x.value);
+            pushData(x.data.trim());
+	    //pushData(x.value);
         //}
         setTimeout(drawGraph, 20);
     }
