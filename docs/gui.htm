@@ -34,10 +34,29 @@ function run() {
 	  
     var POT = 'ADC_3';
 
-    var container = $("#myplot");
-    var totalPoints = container.outerWidth() / 2 || 250;
-    var data = [];
-    var plotOptions = {
+    var ADCcontainer = $("#ADCmyplot");
+    var ADCtotalPoints = ADCcontainer.outerWidth() / 2 || 250;
+    var ADCdata = [];
+    var ADCplotOptions = {
+        series: {
+            shadowSize: 0
+        },
+        yaxis: {
+            min: 0,
+            max: 1
+        },
+        xaxis: {
+            min: 0,
+            max: ADCtotalPoints,
+            show: false
+        }
+    };
+    var ADCplot = $.plot(ADCcontainer, ADCgetData(), ADCplotOptions);
+
+    var ACCELcontainer = $("#ACCELmyplot");
+    var ACCELtotalPoints = ACCELcontainer.outerWidth() / 2 || 250;
+    var ACCELdata = [];
+    var ACCELplotOptions = {
         series: {
             shadowSize: 0
         },
@@ -47,46 +66,74 @@ function run() {
         },
         xaxis: {
             min: 0,
-            max: totalPoints,
+            max: ACCELtotalPoints,
             show: false
         }
     };
-    var plot = $.plot(container, getData(), plotOptions);
+    var ACCELplot = $.plot(ACCELcontainer, ACCELgetData(), ACCELplotOptions);
 
-    drawGraph();
+    ADCdrawGraph();
+    ACCELdrawGraph();
 
-    function drawGraph() {
+    function ACCELdrawGraph() {
 	var IMUX = '/sys/bus/iio/devices/iio:device1/in_accel_x_raw';
-    	  //console.log("drawGraph");
-        plot.setData(getData());
-        plot.draw();
-        b.readTextFile(IMUX, onAnalogRead);
-	//b.analogRead(POT, onAnalogRead);
+        ACCELplot.setData(ACCELgetData());
+        ACCELplot.draw();
+        b.readTextFile(IMUX, ACCELonRead);
+    }
+	
+    function ADCdrawGraph() {
+        ADCplot.setData(ADCgetData());
+        ADCplot.draw();
+	b.analogRead(POT, ADConRead);
     }
 
-    // Handle data back from potentiometer
-    function onAnalogRead(x) {
-    	//console.log("onAnalogRead");
-        //if (!x.err && typeof x.value == 'number') {
-            pushData(x.data.trim());
-	    //pushData(x.value);
-        //}
-        setTimeout(drawGraph, 20);
+    function ACCELonRead(x) {
+        ACCELpushData(x.data.trim());
+        setTimeout(ACCELdrawGraph, 20);
     }
 
-    function pushData(y) {
-        if (data.length && (data.length + 1) > totalPoints) {
-            data = data.slice(1);
+    function ADConRead(x) {
+	ADCpushData(x.value);
+        setTimeout(ADCdrawGraph, 20);
+    }
+
+    function ACCELpushData(y) {
+        if (ACCELdata.length && (ACCELdata.length + 1) > ACCELtotalPoints) {
+            ACCELdata = ACCELdata.slice(1);
         }
-        if (data.length < totalPoints) {
-            data.push(y);
+        if (ACCELdata.length < ACCELtotalPoints) {
+            ACCELdata.push(y);
         }
     }
 
-    function getData() {
+    function ADCpushData(y) {
+        if (ADCdata.length && (ADCdata.length + 1) > ADCtotalPoints) {
+            ADCdata = ADCdata.slice(1);
+        }
+        if (ADCdata.length < ADCtotalPoints) {
+            ADCdata.push(y);
+        }
+    }
+
+    function ACCELgetData() {
         var res = [];
-        for (var i = 0; i < data.length; ++i) {
-            res.push([i, data[i]]);
+        for (var i = 0; i < ACCELdata.length; ++i) {
+            res.push([i, ACCELdata[i]]);
+        }
+        var series = [{
+            data: res,
+            lines: {
+                fill: true
+            }
+        }];
+        return series;
+    }
+
+    function ADCgetData() {
+        var res = [];
+        for (var i = 0; i < ADCdata.length; ++i) {
+            res.push([i, ADCdata[i]]);
         }
         var series = [{
             data: res,
@@ -108,8 +155,12 @@ function run() {
    Sorry, your browser does not support inline SVG.
 </svg> 
 	
-<h1>BoneScript Flot Demo</h1> 
-<div id="myplot" style="width:500px;height:250px;"></div>
+<h1>ADC_3</h1> 
+<div id="ADCmyplot" style="width:500px;height:250px;"></div>
 	
+	
+<h1>ACCEL_X</h1> 
+<div id="ACCELmyplot" style="width:500px;height:250px;"></div>
+
 </body>
 </html>
