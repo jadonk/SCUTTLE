@@ -18,109 +18,73 @@ function run() {
   setTimeout(doRead, 100);
   
   function doRead() {
-	  b.readTextFile('/sys/class/gpio/gpio69/value', onRead);
+    b.readTextFile('/sys/class/gpio/gpio69/value', onRead);
   }
 
-	function onRead(x) {
-  	if(x.err) {
-		  b.writeTextFile('/sys/class/gpio/export', '69');
+  function onRead(x) {
+    if(x.err) {
+      b.writeTextFile('/sys/class/gpio/export', '69');
     } else if(x.data == 1) {
-			element.fill('#f00');
+      element.fill('#f00');
     } else {
-			element.fill('#0f0');
+      element.fill('#0f0');
     }
 	  setTimeout(doRead, 100);  
-    }
+  }
 	  
-    var POT = 'ADC_3';
-
-    var ADCcontainer = $("#ADCmyplot");
-    var ADCtotalPoints = ADCcontainer.outerWidth() / 2 || 250;
-    var ADCdata = [];
-    var ADCplotOptions = {
+  var POT = 'ADC_3';
+  addGraph('/sys/bus/iio/devices/iio:device0/in_voltage0_raw',
+           '#ADCplot', 0, 1);
+  addGraph('/sys/bus/iio/devices/iio:device1/in_accel_x_raw',
+           '#ACCELplot', -20000, 20000);
+  addGraph('/sys/bus/iio/devices/iio:device2/in_magn_x_raw',
+           '#MAGplot', -40, 40);
+  
+  function addGraph(file, id, min, max) {
+    var container = $(id);
+    var totalPoints = container.outerWidth() / 2 || 250;
+    var data = [];
+    var plotOptions = {
         series: {
             shadowSize: 0
         },
         yaxis: {
-            min: 0,
-            max: 1
+            min: min,
+            max: max
         },
         xaxis: {
             min: 0,
-            max: ADCtotalPoints,
+            max: totalPoints,
             show: false
         }
     };
-    var ADCplot = $.plot(ADCcontainer, ADCgetData(), ADCplotOptions);
+    var plot = $.plot(container, getData(), plotOptions);
+    drawGraph();
+    
+    function drawGraph() {
+        plot.setData(getData());
+        plot.draw();
+        b.readTextFile(file, onFileRead);
+    }
 
-    var ACCELcontainer = $("#ACCELmyplot");
-    var ACCELtotalPoints = ACCELcontainer.outerWidth() / 2 || 250;
-    var ACCELdata = [];
-    var ACCELplotOptions = {
-        series: {
-            shadowSize: 0
-        },
-        yaxis: {
-            min: -20000,
-            max: 20000
-        },
-        xaxis: {
-            min: 0,
-            max: ACCELtotalPoints,
-            show: false
+    function onFileRead(x) {
+        pushData(x.data.trim());
+        setTimeout(drawGraph, 20);
+    }
+
+    function pushData(y) {
+        if (data.length && (data.length + 1) > totalPoints) {
+            data = data.slice(1);
         }
-    };
-    var ACCELplot = $.plot(ACCELcontainer, ACCELgetData(), ACCELplotOptions);
-
-    ADCdrawGraph();
-    ACCELdrawGraph();
-
-    function ACCELdrawGraph() {
-	//var IMUX = '/sys/bus/iio/devices/iio:device1/in_accel_x_raw';
-	var IMUX = '/sys/bus/iio/devices/iio:device2/in_magn_x_raw';
-        ACCELplot.setData(ACCELgetData());
-        ACCELplot.draw();
-        b.readTextFile(IMUX, ACCELonRead);
-    }
-	
-    function ADCdrawGraph() {
-        ADCplot.setData(ADCgetData());
-        ADCplot.draw();
-	b.analogRead(POT, ADConRead);
-    }
-
-    function ACCELonRead(x) {
-        ACCELpushData(x.data.trim());
-        setTimeout(ACCELdrawGraph, 20);
-    }
-
-    function ADConRead(x) {
-	ADCpushData(x.value);
-        setTimeout(ADCdrawGraph, 20);
-    }
-
-    function ACCELpushData(y) {
-        if (ACCELdata.length && (ACCELdata.length + 1) > ACCELtotalPoints) {
-            ACCELdata = ACCELdata.slice(1);
-        }
-        if (ACCELdata.length < ACCELtotalPoints) {
-            ACCELdata.push(y);
+        if (data.length < totalPoints) {
+            data.push(y);
         }
     }
 
-    function ADCpushData(y) {
-        if (ADCdata.length && (ADCdata.length + 1) > ADCtotalPoints) {
-            ADCdata = ADCdata.slice(1);
-        }
-        if (ADCdata.length < ADCtotalPoints) {
-            ADCdata.push(y);
-        }
-    }
-
-    function ACCELgetData() {
+    function getData() {
         var res = [];
-        for (var i = 0; i < ACCELdata.length; ++i) {
-            res.push([i, ACCELdata[i]]);
+        for (var i = 0; i < data.length; ++i) {
+            res.push([i, data[i]]);
         }
         var series = [{
             data: res,
@@ -130,38 +94,29 @@ function run() {
         }];
         return series;
     }
-
-    function ADCgetData() {
-        var res = [];
-        for (var i = 0; i < ADCdata.length; ++i) {
-            res.push([i, ADCdata[i]]);
-        }
-        var series = [{
-            data: res,
-            lines: {
-                fill: true
-            }
-        }];
-        return series;
-    }
+  }
 }  
   </script>
 </head>
 <body>
+  
+<h1>SCUTTLE GUI</h1>
 
-<h1>Testing SVG functionality</h1>
-
+<h2>PAUSE</h2>
 <svg width="100" height="100">
    <circle id="mycircle" cx="50" cy="50" r="40" stroke="#aaa" stroke-width="4" fill="#aaa" />
    Sorry, your browser does not support inline SVG.
 </svg> 
 	
-<h1>ADC_3</h1> 
-<div id="ADCmyplot" style="width:500px;height:250px;"></div>
+<h2>ADC_3</h2> 
+<div id="ADCplot" style="width:500px;height:250px;"></div>
 	
 	
-<h1>ACCEL_X</h1> 
-<div id="ACCELmyplot" style="width:500px;height:250px;"></div>
+<h2>ACCEL_X</h2> 
+<div id="ACCELplot" style="width:500px;height:250px;"></div>
+
+<h2>MAG_X</h2> 
+<div id="MAGplot" style="width:500px;height:250px;"></div>
 
 </body>
 </html>
