@@ -34,7 +34,7 @@ function run() {
 	  
   var POT = 'ADC_3';
   addGraph('/sys/bus/iio/devices/iio:device0/in_voltage0_raw',
-           '#ADCplot', 0, 1);
+           '#ADCplot', 0, 4095);
   addGraph('/sys/bus/iio/devices/iio:device1/in_accel_x_raw',
            '#ACCELplot', -20000, 20000);
   addGraph('/sys/bus/iio/devices/iio:device2/in_magn_x_raw',
