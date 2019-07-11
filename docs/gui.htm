@@ -76,7 +76,8 @@ function run() {
     ACCELdrawGraph();
 
     function ACCELdrawGraph() {
-	var IMUX = '/sys/bus/iio/devices/iio:device1/in_accel_x_raw';
+	//var IMUX = '/sys/bus/iio/devices/iio:device1/in_accel_x_raw';
+	var IMUX = '/sys/bus/iio/devices/iio:device2/in_magn_x_raw';
         ACCELplot.setData(ACCELgetData());
         ACCELplot.draw();
         b.readTextFile(IMUX, ACCELonRead);
